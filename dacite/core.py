@@ -106,7 +106,8 @@ def _build_value(type_: Type, data: Any, config: Config) -> Any:
     elif is_generic_subclass(type_) and cache(is_dataclass)(get_origin(type_)):
         origin = get_origin(type_)
         assert origin is not None
-        data = from_dict(data_class=origin, data=data, config=config)
+        # data = from_dict(data_class=origin, data=data, config=config)
+        data = _build_value(origin, data, config)
     for cast_type in config.cast:
         if is_subclass(type_, cast_type):
             if is_generic_collection(type_):

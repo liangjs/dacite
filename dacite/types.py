@@ -100,8 +100,8 @@ def has_generic_alias_in_args(type_: Type) -> bool:
 
 def is_valid_generic_class(value: Any, type_: Type) -> bool:
     origin = get_origin(type_)
-    if not (origin and isinstance(value, origin)):
-        return False
+    return bool(origin) and isinstance(value, origin)
+    # skip all checks below
     type_args = get_args(type_)
     type_hints = cache(get_type_hints)(type(value))
     for field_name, field_type in type_hints.items():
