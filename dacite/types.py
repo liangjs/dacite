@@ -1,5 +1,5 @@
 from dataclasses import InitVar
-from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, get_type_hints, cast as typing_cast
+from typing import Type, Any, Optional, Union, Collection, TypeVar, Mapping, Tuple, ClassVar, get_type_hints, cast as typing_cast
 
 try:
     from typing import get_origin, get_args  # type: ignore
@@ -102,13 +102,18 @@ def is_valid_generic_class(value: Any, type_: Type) -> bool:
     origin = get_origin(type_)
     if not (origin and isinstance(value, origin)):
         return False
+    type_args = get_args(type_)
     type_hints = cache(get_type_hints)(type(value))
     for field_name, field_type in type_hints.items():
+        field_value = getattr(value, field_name, None)
         if isinstance(field_type, TypeVar):
-            args = get_args(type_)
-            return True if not args else any(isinstance(getattr(value, field_name, None), arg) for arg in args)
-        else:
-            return isinstance(value, type_)
+            # TODO: this will fail to detect incorrect type in some cases
+            # see comments on https://github.com/konradhalas/dacite/pull/209
+            if not any(is_instance(field_value, arg) for arg in type_args):
+                return False
+        elif get_origin(field_type) is not ClassVar:
+            if not is_instance(field_value, field_type):
+                return False
     return True
 
 
